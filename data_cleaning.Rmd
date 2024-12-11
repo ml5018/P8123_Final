@@ -27,7 +27,7 @@ nhanes_data = nhanes_data |>
 
 # combine year cycles
 nhanes_data = nhanes_data |>
-  mutate(svy_weight_com = svy_weight_mec / 10.6)
+  mutate(svy_weight_mec = svy_weight_mec / 10.6)
 
 # create binary indicator
 nhanes_data = nhanes_data |>
@@ -45,7 +45,7 @@ nhanes_sub = nhanes_calibrate(nhanes_sub, nhanes_data, "svy_year")
 # yrsub = subset(htsub, svy_year %in% c("2013-2014", "2015-2016", "2017-2020"))
 
 # create survey design
-htndstrat = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_com, 
+htndstrat = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_cal, 
                       data = nhanes_sub, nest = TRUE)
 
 # save the subpopulation data
