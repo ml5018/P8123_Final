@@ -9,3 +9,37 @@ library(cardioStatsUSA)
 library(dplyr)
 library(survey)
 ```
+
+```{r data}
+data_key = nhanes_key
+
+nhanes_data = nhanes_data |> 
+  mutate(demo_age_cat = as.factor(demo_age_cat),
+         demo_race = as.factor(demo_race),
+         demo_race_black = as.factor(demo_race_black),
+         demo_gender = as.factor(demo_gender),
+         bp_control_140_90 = as.factor(bp_control_140_90),
+         bp_med_use = as.factor(bp_med_use),
+         cc_smoke = as.factor(cc_smoke),
+         cc_bmi = as.factor(cc_bmi),
+         svy_year = as.factor(svy_year))
+
+nhanes_data = nhanes_data |>
+  mutate(svy_weight_com = svy_weight_mec / 10.6)
+
+nhanes_data = nhanes_data |>
+  mutate(svy_post2013 = 
+           ifelse(svy_year %in% c("2013-2014", "2015-2016", "2017-2020"), "Yes", "No")) |>
+  mutate(svy_post2013 = as.factor(svy_post2013))
+
+nhanes_sub = nhanes_data[svy_subpop_htn == 1]
+nhanes_sub = nhanes_calibrate(nhanes_sub, nhanes_data, "svy_year")
+
+# dstrat = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_mec, 
+#                    data = nhanes_data, nest = TRUE) 
+# htsub = subset(dstrat, svy_subpop_htn == 1)
+# yrsub = subset(htsub, svy_year %in% c("2013-2014", "2015-2016", "2017-2020"))
+
+htndstrat = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_com, 
+                      data = nhanes_sub, nest = TRUE) 
+```
