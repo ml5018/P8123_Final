@@ -1,0 +1,11 @@
+---
+title: "Data Cleaning"
+author: "Mengxiao Luan"
+output: pdf_document
+---
+
+```{r package}
+library(cardioStatsUSA)
+library(dplyr)
+library(survey)
+```
