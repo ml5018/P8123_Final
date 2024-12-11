@@ -11,6 +11,7 @@ library(survey)
 ```
 
 ```{r data}
+# data input
 data_key = nhanes_key
 
 nhanes_data = nhanes_data |> 
@@ -24,14 +25,17 @@ nhanes_data = nhanes_data |>
          cc_bmi = as.factor(cc_bmi),
          svy_year = as.factor(svy_year))
 
+# combine year cycles
 nhanes_data = nhanes_data |>
   mutate(svy_weight_com = svy_weight_mec / 10.6)
 
+# create binary indicator
 nhanes_data = nhanes_data |>
   mutate(svy_post2013 = 
            ifelse(svy_year %in% c("2013-2014", "2015-2016", "2017-2020"), "Yes", "No")) |>
   mutate(svy_post2013 = as.factor(svy_post2013))
 
+# subgroup and calibration
 nhanes_sub = nhanes_data[svy_subpop_htn == 1]
 nhanes_sub = nhanes_calibrate(nhanes_sub, nhanes_data, "svy_year")
 
@@ -40,8 +44,10 @@ nhanes_sub = nhanes_calibrate(nhanes_sub, nhanes_data, "svy_year")
 # htsub = subset(dstrat, svy_subpop_htn == 1)
 # yrsub = subset(htsub, svy_year %in% c("2013-2014", "2015-2016", "2017-2020"))
 
+# create survey design
 htndstrat = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_com, 
                       data = nhanes_sub, nest = TRUE)
 
+# save the subpopulation data
 saveRDS(nhanes_sub, file = "./nhanes_subpop_htn.rds")
 ```
