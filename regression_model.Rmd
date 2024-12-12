@@ -1,0 +1,31 @@
+---
+title: "Regression Model"
+author: "Mengxiao Luan"
+output: pdf_document
+---
+
+```{r package}
+library(dplyr)
+library(survey)
+```
+
+```{r setup}
+nhanes_subpop_htn = readRDS("./nhanes_subpop_htn.rds")
+
+htndstrat = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_cal, 
+                      data = nhanes_subpop_htn, nest = TRUE)
+```
+
+```{r model}
+model_0 = svyglm(bp_control_140_90 ~ demo_age_cat + demo_race + demo_gender + bp_med_use + cc_smoke + cc_bmi + cc_diabetes + cc_ckd + cc_cvd_any + svy_post2013, 
+               family = quasibinomial, design = htndstrat)
+summary(model)
+
+model_1 = svyglm(bp_control_140_90 ~ demo_age_cat + demo_race + demo_gender + bp_med_use + cc_smoke + cc_bmi + cc_ckd + cc_cvd_any + svy_post2013, 
+               family = quasibinomial, design = htndstrat)
+summary(model)
+
+model_2 = svyglm(bp_control_140_90 ~ demo_age_cat + demo_race + demo_race_black + demo_gender + bp_med_use + cc_smoke + cc_bmi + cc_ckd + cc_cvd_any + svy_post2013 + svy_post2013 * demo_race + svy_post2013 * cc_smoke, family = quasibinomial, design = htndstrat)
+summary(model)
+```
+
