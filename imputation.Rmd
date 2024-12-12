@@ -1,0 +1,25 @@
+---
+title: "Multiple Imputation"
+author: "Mengxiao Luan"
+output: pdf_document
+---
+
+```{r package}
+library(dplyr)
+library(survey)
+library(mice)
+```
+
+```{r setup}
+nhanes_subpop_htn = readRDS("./nhanes_subpop_htn.rds")
+
+# select variable for imputation
+nhanes_imp_htn = nhanes_subpop_htn |> 
+  select(svy_id:svy_subpop_htn, demo_age_cat:bp_dia_mean, bp_uncontrolled_140_90,
+         bp_med_use:htn_resistant_jnc7_thz, cc_smoke:svy_weight_cal)
+
+# skip questions?
+imp_0 = mice(nhanes_imp_htn, m = 5, maxit = 0, seed = 2024)
+meth_0 = imp_0$meth
+pred_0 = imp_0$pred
+```
