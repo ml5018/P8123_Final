@@ -1,0 +1,96 @@
+---
+title: "Descriptive Analysis"
+author: "Mengxiao Luan"
+output: pdf_document
+---
+
+```{r package}
+library(dplyr)
+library(survey)
+```
+
+```{r setup}
+nhanes_subpop_htn = readRDS("./nhanes_subpop_htn.rds")
+
+htndstrat = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_cal, 
+                      data = nhanes_subpop_htn, nest = TRUE)
+```
+
+```{r descriptive}
+age = svyby(~ bp_uncontrolled_140_90, ~ interaction(demo_age_cat, svy_post2013), 
+            design = htndstrat, svymean)
+print(ftable(age, rownames = list(age = c("18-44", "45-64", "65-74", "75+")), 
+       com.imp = c("pre 2013", "post 2013")), digits = 2)
+```
+
+```{r}
+par(mfrow = c(2,3))
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ svy_post2013, htndstrat, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("Before 2013", "After 2013"),
+        main = "Proportion of BP Uncontrolled before and after 2013")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ demo_age_cat, htndstrat, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("18-44", "45-64", "65-74", "75+"), 
+        main = "Proportion of BP Uncontrolled among Age Groups")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ demo_race, htndstrat, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("White", "Black", "Asian", "Hispanic", "Other"), 
+        main = "Proportion of BP Uncontrolled among Race Groups")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ demo_pregnant, htndstrat, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("No Pregnancy", " Pregnancy"), 
+        main = "Proportion of BP Uncontrolled among Pregnancy Groups")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ demo_gender, htndstrat, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("Men", "Women"), 
+        main = "Proportion of BP Uncontrolled among Gender Groups")
+```
+
+```{r}
+htn_pre2013 = subset(htndstrat, svy_post2013 == "No")
+htn_post2013 = subset(htndstrat, svy_post2013 == "Yes")
+
+par(mfrow = c(1,2))
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ svy_post2013, htndstrat, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("Before 2013", "After 2013"),
+        main = "Proportion of BP Uncontrolled")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ svy_post2013, htndstrat, svymean, na.rm = TRUE), 
+        beside = TRUE, names.arg = c("Before 2013", "After 2013"),
+        main = "Proportion of BP Uncontrolled")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ demo_age_cat, htn_pre2013, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("18-44", "45-64", "65-74", "75+"), 
+        main = "Age Groups before 2013")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ demo_age_cat, htn_post2013, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("18-44", "45-64", "65-74", "75+"), 
+        main = "Age Groups after 2013")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ demo_race, htn_pre2013, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("White", "Black", "Asian", "Hispanic", "Other"), 
+        main = "Race Groups before 2013")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ demo_race, htn_post2013, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("White", "Black", "Asian", "Hispanic", "Other"), 
+        main = "Race Groups after 2013")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ demo_pregnant, htn_pre2013, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("No Pregnancy", " Pregnancy"), 
+        main = "Pregnancy Groups before 2013")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ demo_pregnant, htn_post2013, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("No Pregnancy", " Pregnancy"), 
+        main = "Pregnancy Groups after 2013")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ demo_gender, htn_pre2013, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("Men", "Women"), 
+        main = "Gender Groups before 2013")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ demo_gender, htn_post2013, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("Men", "Women"), 
+        main = "Gender Groups after 2013")
+```
+
