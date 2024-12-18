@@ -12,7 +12,7 @@ library(survey)
 ```{r setup}
 nhanes_subpop_htn = readRDS("./nhanes_subpop_htn.rds")
 
-htndstrat = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_com, 
+htndstrat = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_cal, 
                       data = nhanes_subpop_htn, nest = TRUE)
 ```
 
