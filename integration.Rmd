@@ -1,0 +1,74 @@
+---
+title: "Integrated Codes of Final Project"
+author: "Heming Pei, Mengxiao Luan, Yilei Yang, Yaduo Wang"
+output: pdf_document
+---
+
+```{r package}
+library(cardioStatsUSA)
+library(dplyr)
+library(survey)
+```
+
+```{r data}
+# data input
+data_key = nhanes_key
+
+nhanes_data = nhanes_data |> 
+  mutate(demo_age_cat = as.factor(demo_age_cat),
+         demo_race = as.factor(demo_race),
+         demo_race_black = as.factor(demo_race_black),
+         demo_gender = as.factor(demo_gender),
+         bp_control_140_90 = as.factor(bp_control_140_90),
+         bp_med_use = as.factor(bp_med_use),
+         cc_smoke = as.factor(cc_smoke),
+         cc_bmi = as.factor(cc_bmi),
+         svy_year = as.factor(svy_year))
+
+# combine year cycles
+nhanes_data = nhanes_data |>
+  mutate(svy_weight_mec = svy_weight_mec / 10.6)
+
+# create binary indicator
+nhanes_data = nhanes_data |>
+  mutate(svy_post2013 = 
+           ifelse(svy_year %in% c("2013-2014", "2015-2016", "2017-2020"), "Yes", "No")) |>
+  mutate(svy_post2013 = as.factor(svy_post2013))
+
+# subgroup and calibration
+nhanes_sub = nhanes_data[svy_subpop_htn == 1]
+nhanes_sub = nhanes_calibrate(nhanes_sub, nhanes_data, "svy_year")
+
+# create survey design
+htndstrat = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_cal, 
+                      data = nhanes_sub, nest = TRUE)
+```
+
+```{r descrptive}
+# table 1
+age = svyby(~ bp_uncontrolled_140_90, ~ interaction(demo_age_cat, svy_post2013), 
+            design = htndstrat, svymean)
+print(ftable(age, rownames = list(age = c("18-44", "45-64", "65-74", "75+")), 
+       com.imp = c("pre 2013", "post 2013")), digits = 2)
+
+race = svyby(~ bp_uncontrolled_140_90, ~ interaction(demo_race, svy_post2013), 
+            design = htndstrat, svymean)
+print(ftable(race, rownames = list(race = c("White", "Black", "Asian", "Hispanic", "Other")), 
+       com.imp = c("pre 2013", "post 2013")), digits = 2)
+
+preg_status = svyby(~ bp_uncontrolled_140_90, ~ interaction(demo_pregnant, svy_post2013), 
+            design = htndstrat, svymean)
+print(ftable(preg_status, rownames = list(preg_status = c("No Pregnancy", " Pregnancy")), 
+       com.imp = c("pre 2013", "post 2013")), digits = 2)
+
+gender = svyby(~ bp_uncontrolled_140_90, ~ interaction(demo_gender, svy_post2013), 
+            design = htndstrat, svymean)
+print(ftable(gender, rownames = list(gender = c("Men", "Women")), 
+       com.imp = c("pre 2013", "post 2013")), digits = 2)
+
+smoke = svyby(~ bp_uncontrolled_140_90, ~ interaction(cc_smoke, svy_post2013), 
+            design = htndstrat, svymean)
+print(ftable(smoke, rownames = list(smoke = c("Never", "Former", "Current")), 
+       com.imp = c("pre 2013", "post 2013")), digits = 2)
+```
+
