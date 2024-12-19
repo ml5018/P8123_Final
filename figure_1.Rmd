@@ -112,9 +112,8 @@ png_5 = image_read("./figure_1/wps_doc_4.png")
 png_6 = image_read("./figure_1/wps_doc_5.png")
 
 combined_vertical = image_append(c(png_1, png_2, png_3, png_4, png_5, png_6), stack = TRUE)
-
-png("my_plot.png", width = 1000, height = 2400)
 combined_vertical
-dev.off()
+
+image_write(combined_vertical, path = "./figure_1.png", format = "png")
 ```
 
