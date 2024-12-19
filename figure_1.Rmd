@@ -7,6 +7,7 @@ output: pdf_document
 ```{r package}
 library(dplyr)
 library(survey)
+library(magick)
 ```
 
 ```{r setup}
@@ -100,5 +101,20 @@ barplot(svyby(~ bp_uncontrolled_140_90, ~ cc_smoke, htn_pre2013, svymean, na.rm 
 barplot(svyby(~ bp_uncontrolled_140_90, ~ cc_smoke, htn_post2013, svymean, na.rm = TRUE), 
         beside = FALSE, names.arg = c("Never", "Former", "Current"), 
         main = "Smoke Groups after 2013")
+```
+
+```{r}
+png_1 = image_read("./figure_1/wps_doc_0.png")
+png_2 = image_read("./figure_1/wps_doc_1.png")
+png_3 = image_read("./figure_1/wps_doc_2.png")
+png_4 = image_read("./figure_1/wps_doc_3.png")
+png_5 = image_read("./figure_1/wps_doc_4.png")
+png_6 = image_read("./figure_1/wps_doc_5.png")
+
+combined_vertical = image_append(c(png_1, png_2, png_3, png_4, png_5, png_6), stack = TRUE)
+
+png("my_plot.png", width = 1000, height = 2400)
+combined_vertical
+dev.off()
 ```
 
