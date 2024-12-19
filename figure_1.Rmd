@@ -92,5 +92,13 @@ barplot(svyby(~ bp_uncontrolled_140_90, ~ demo_gender, htn_pre2013, svymean, na.
 barplot(svyby(~ bp_uncontrolled_140_90, ~ demo_gender, htn_post2013, svymean, na.rm = TRUE), 
         beside = FALSE, names.arg = c("Men", "Women"), 
         main = "Gender Groups after 2013")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ cc_smoke, htn_pre2013, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("Never", "Former", "Current"), 
+        main = "Smoke Groups before 2013")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ cc_smoke, htn_post2013, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("Never", "Former", "Current"), 
+        main = "Smoke Groups after 2013")
 ```
 
