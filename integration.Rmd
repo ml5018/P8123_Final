@@ -1,13 +1,14 @@
 ---
 title: "Integrated Codes of Final Project"
 author: "Heming Pei, Mengxiao Luan, Yilei Yang, Yaduo Wang"
-output: pdf_document
+output: html_document
 ---
 
 ```{r package}
 library(cardioStatsUSA)
 library(dplyr)
 library(survey)
+library(mice)
 ```
 
 ```{r data}
@@ -70,5 +71,114 @@ smoke = svyby(~ bp_uncontrolled_140_90, ~ interaction(cc_smoke, svy_post2013),
             design = htndstrat, svymean)
 print(ftable(smoke, rownames = list(smoke = c("Never", "Former", "Current")), 
        com.imp = c("pre 2013", "post 2013")), digits = 2)
+
+svychisq(~ demo_age_cat + svy_post2013, design = htndstrat, statistic = "F")
+svychisq(~ demo_race + svy_post2013, design = htndstrat, statistic = "F")
+svychisq(~ demo_pregnant + svy_post2013, design = htndstrat, statistic = "F")
+svychisq(~ demo_gender + svy_post2013, design = htndstrat, statistic = "F")
+svychisq(~ demo_smoke + svy_post2013, design = htndstrat, statistic = "F")
+
+# figure 1
+htn_pre2013 = subset(htndstrat, svy_post2013 == "No")
+htn_post2013 = subset(htndstrat, svy_post2013 == "Yes")
+
+par(mfrow = c(1,2))
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ svy_post2013, htndstrat, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("Before 2013", "After 2013"),
+        main = "Proportion of BP Uncontrolled")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ svy_post2013, htndstrat, svymean, na.rm = TRUE), 
+        beside = TRUE, names.arg = c("Before 2013", "After 2013"),
+        main = "Proportion of BP Uncontrolled")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ demo_age_cat, htn_pre2013, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("18-44", "45-64", "65-74", "75+"), 
+        main = "Age Groups before 2013")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ demo_age_cat, htn_post2013, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("18-44", "45-64", "65-74", "75+"), 
+        main = "Age Groups after 2013")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ demo_race, htn_pre2013, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("White", "Black", "Asian", "Hispanic", "Other"), 
+        main = "Race Groups before 2013")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ demo_race, htn_post2013, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("White", "Black", "Asian", "Hispanic", "Other"), 
+        main = "Race Groups after 2013")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ demo_pregnant, htn_pre2013, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("No Pregnancy", " Pregnancy"), 
+        main = "Pregnancy Groups before 2013")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ demo_pregnant, htn_post2013, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("No Pregnancy", " Pregnancy"), 
+        main = "Pregnancy Groups after 2013")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ demo_gender, htn_pre2013, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("Men", "Women"), 
+        main = "Gender Groups before 2013")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ demo_gender, htn_post2013, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("Men", "Women"), 
+        main = "Gender Groups after 2013")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ cc_smoke, htn_pre2013, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("Never", "Former", "Current"), 
+        main = "Smoke Groups before 2013")
+
+barplot(svyby(~ bp_uncontrolled_140_90, ~ cc_smoke, htn_post2013, svymean, na.rm = TRUE), 
+        beside = FALSE, names.arg = c("Never", "Former", "Current"), 
+        main = "Smoke Groups after 2013")
 ```
 
+```{r model}
+# multiple imputation
+data <- nhanes_sub %>% 
+  select(svy_year,svy_psu, svy_strata, bp_control_140_90, starts_with("demo_"), 
+         bp_med_recommended_escesh, bp_med_n_pills, starts_with("cc_"), 
+         svy_post2013,svy_weight_cal,-cc_cvd_chd,-cc_cvd_hf)
+
+method <- mice(data, m = 1, maxit = 0)$method
+method
+method["cc_egfr"] <- "norm" 
+method["cc_acr"] <- "norm" 
+method["cc_hba1c"] <- "norm" 
+
+imp <- mice(data, m = 5, method = method, maxit = 5, seed = 123)
+imputed_datasets <- complete(imp, "all")
+
+# regression
+results <- lapply(imputed_datasets, function(dataset) {
+  design = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_cal, 
+                      data = dataset, nest = TRUE)
+  svyglm(bp_control_140_90 ~ demo_age_cat + demo_race + demo_gender + demo_pregnant + bp_med_recommended_escesh + bp_med_n_pills + cc_smoke + cc_bmi + cc_diabetes + cc_ckd + cc_cvd_any + cc_egfr_lt60 + cc_acr_gteq30 + cc_hba1c + svy_post2013, family = quasibinomial, design = design) 
+})
+
+pooled_results <- pool(results)
+
+summary(pooled_results)
+
+# IPTW
+results <- lapply(imputed_datasets, function(dataset) {
+  
+  design = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_cal, 
+                      data = dataset, nest = TRUE)
+
+  ps_model <- svyglm(svy_post2013 ~ demo_age_cat + demo_race + demo_gender + demo_pregnant + bp_med_recommended_escesh + bp_med_n_pills + cc_smoke + cc_bmi + cc_diabetes + cc_ckd + cc_cvd_any + cc_egfr_lt60 + cc_acr_gteq30 + cc_hba1c , family = binomial, design = design) 
+  
+  dataset$ps <- ps_model$fitted.values
+  
+  dataset$iptw <- ifelse(dataset$svy_post2013=="Yes", 1/dataset$ps,1/(1-dataset$ps))
+  
+  new_design = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_cal*iptw, 
+                      data = dataset, nest = TRUE)
+  
+  svyglm(bp_control_140_90 ~ svy_post2013, family = binomial, design = new_design) 
+})
+
+pooled_results <- pool(results)
+
+summary(pooled_results)
+```
