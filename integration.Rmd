@@ -76,7 +76,7 @@ svychisq(~ demo_age_cat + svy_post2013, design = htndstrat, statistic = "F")
 svychisq(~ demo_race + svy_post2013, design = htndstrat, statistic = "F")
 svychisq(~ demo_pregnant + svy_post2013, design = htndstrat, statistic = "F")
 svychisq(~ demo_gender + svy_post2013, design = htndstrat, statistic = "F")
-svychisq(~ demo_smoke + svy_post2013, design = htndstrat, statistic = "F")
+svychisq(~ cc_smoke + svy_post2013, design = htndstrat, statistic = "F")
 
 # figure 1
 htn_pre2013 = subset(htndstrat, svy_post2013 == "No")
@@ -170,7 +170,7 @@ results <- lapply(imputed_datasets, function(dataset) {
   
   dataset$ps <- ps_model$fitted.values
   
-  dataset$iptw <- ifelse(dataset$svy_post2013=="Yes", 1/dataset$ps,1/(1-dataset$ps))
+  dataset$iptw <- ifelse(dataset$svy_post2013 == "Yes", 1/dataset$ps,1/(1-dataset$ps))
   
   new_design = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_cal*iptw, 
                       data = dataset, nest = TRUE)
