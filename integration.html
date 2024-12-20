@@ -494,6 +494,32 @@ print(ftable(gender, rownames = list(gender = c(&quot;Men&quot;, &quot;Women&quo
 ##                                        SE                         0.0068                    0.0068
 ## Women.Yes                              svymean                    0.8475                    0.1525
 ##                                        SE                         0.0057                    0.0057</code></pre>
+<pre class="r"><code>pills = svyby(~ bp_uncontrolled_140_90, ~ interaction(bp_med_n_pills, svy_post2013), 
+            design = htndstrat, svymean)
+print(ftable(pills, rownames = list(pills = c(&quot;None&quot;, &quot;One&quot;, &quot;Two&quot;, &quot;Three&quot;, &quot;Four/More&quot;)), 
+       com.imp = c(&quot;pre 2013&quot;, &quot;post 2013&quot;)), digits = 2)</code></pre>
+<pre><code>##                                                    bp_uncontrolled_140_90No bp_uncontrolled_140_90Yes
+## interaction(bp_med_n_pills, svy_post2013)                                                            
+## None.No                                   svymean                    0.8884                    0.1116
+##                                           SE                         0.0032                    0.0032
+## One.No                                    svymean                    0.6953                    0.3047
+##                                           SE                         0.0090                    0.0090
+## Two.No                                    svymean                    0.6568                    0.3432
+##                                           SE                         0.0116                    0.0116
+## Three.No                                  svymean                    0.6404                    0.3596
+##                                           SE                         0.0179                    0.0179
+## Four or more.No                           svymean                    0.5566                    0.4434
+##                                           SE                         0.0285                    0.0285
+## None.Yes                                  svymean                    0.8937                    0.1063
+##                                           SE                         0.0046                    0.0046
+## One.Yes                                   svymean                    0.7325                    0.2675
+##                                           SE                         0.0128                    0.0128
+## Two.Yes                                   svymean                    0.6858                    0.3142
+##                                           SE                         0.0121                    0.0121
+## Three.Yes                                 svymean                    0.6561                    0.3439
+##                                           SE                         0.0264                    0.0264
+## Four or more.Yes                          svymean                    0.6496                    0.3504
+##                                           SE                         0.0353                    0.0353</code></pre>
 <pre class="r"><code>smoke = svyby(~ bp_uncontrolled_140_90, ~ interaction(cc_smoke, svy_post2013), 
             design = htndstrat, svymean)
 print(ftable(smoke, rownames = list(smoke = c(&quot;Never&quot;, &quot;Former&quot;, &quot;Current&quot;)), 
@@ -512,6 +538,98 @@ print(ftable(smoke, rownames = list(smoke = c(&quot;Never&quot;, &quot;Former&qu
 ##                                     SE                         0.0109                    0.0109
 ## Current.Yes                         svymean                    0.8363                    0.1637
 ##                                     SE                         0.0105                    0.0105</code></pre>
+<pre class="r"><code>bmi = svyby(~ bp_uncontrolled_140_90, ~ interaction(cc_bmi, svy_post2013), 
+            design = htndstrat, svymean)
+print(ftable(bmi, rownames = list(bmi = c(&quot;&lt;25&quot;, &quot;25 to &lt;30&quot;, &quot;30 to &lt;35&quot;, &quot;35+&quot;)), 
+       com.imp = c(&quot;pre 2013&quot;, &quot;post 2013&quot;)), digits = 2)</code></pre>
+<pre><code>##                                            bp_uncontrolled_140_90No bp_uncontrolled_140_90Yes
+## interaction(cc_bmi, svy_post2013)                                                            
+## &lt;25.No                            svymean                    0.8833                    0.1167
+##                                   SE                         0.0043                    0.0043
+## 25 to &lt;30.No                      svymean                    0.8339                    0.1661
+##                                   SE                         0.0056                    0.0056
+## 30 to &lt;35.No                      svymean                    0.8077                    0.1923
+##                                   SE                         0.0057                    0.0057
+## 35+.No                            svymean                    0.7805                    0.2195
+##                                   SE                         0.0090                    0.0090
+## &lt;25.Yes                           svymean                    0.8798                    0.1202
+##                                   SE                         0.0056                    0.0056
+## 25 to &lt;30.Yes                     svymean                    0.8427                    0.1573
+##                                   SE                         0.0077                    0.0077
+## 30 to &lt;35.Yes                     svymean                    0.8320                    0.1680
+##                                   SE                         0.0084                    0.0084
+## 35+.Yes                           svymean                    0.7867                    0.2133
+##                                   SE                         0.0108                    0.0108</code></pre>
+<pre class="r"><code>diabetes = svyby(~ bp_uncontrolled_140_90, ~ interaction(cc_diabetes, svy_post2013), 
+            design = htndstrat, svymean)
+print(ftable(diabetes, rownames = list(diabetes = c(&quot;No&quot;, &quot;Yes&quot;)), 
+       com.imp = c(&quot;pre 2013&quot;, &quot;post 2013&quot;)), digits = 2)</code></pre>
+<pre><code>##                                                 bp_uncontrolled_140_90No bp_uncontrolled_140_90Yes
+## interaction(cc_diabetes, svy_post2013)                                                            
+## No.No                                  svymean                    0.8505                    0.1495
+##                                        SE                         0.0031                    0.0031
+## Yes.No                                 svymean                    0.6931                    0.3069
+##                                        SE                         0.0095                    0.0095
+## No.Yes                                 svymean                    0.8568                    0.1432
+##                                        SE                         0.0045                    0.0045
+## Yes.Yes                                svymean                    0.7112                    0.2888
+##                                        SE                         0.0159                    0.0159</code></pre>
+<pre class="r"><code>ckd = svyby(~ bp_uncontrolled_140_90, ~ interaction(cc_ckd, svy_post2013), 
+            design = htndstrat, svymean)
+print(ftable(ckd, rownames = list(ckd = c(&quot;No&quot;, &quot;Yes&quot;)), 
+       com.imp = c(&quot;pre 2013&quot;, &quot;post 2013&quot;)), digits = 2)</code></pre>
+<pre><code>##                                            bp_uncontrolled_140_90No bp_uncontrolled_140_90Yes
+## interaction(cc_ckd, svy_post2013)                                                            
+## No.No                             svymean                    0.8649                    0.1351
+##                                   SE                         0.0032                    0.0032
+## Yes.No                            svymean                    0.6388                    0.3612
+##                                   SE                         0.0080                    0.0080
+## No.Yes                            svymean                    0.8688                    0.1312
+##                                   SE                         0.0049                    0.0049
+## Yes.Yes                           svymean                    0.6597                    0.3403
+##                                   SE                         0.0141                    0.0141</code></pre>
+<pre class="r"><code>cvd = svyby(~ bp_uncontrolled_140_90, ~ interaction(cc_cvd_any, svy_post2013), 
+            design = htndstrat, svymean)
+print(ftable(cvd, rownames = list(cvd = c(&quot;No&quot;, &quot;Yes&quot;)), 
+       com.imp = c(&quot;pre 2013&quot;, &quot;post 2013&quot;)), digits = 2)</code></pre>
+<pre><code>##                                                bp_uncontrolled_140_90No bp_uncontrolled_140_90Yes
+## interaction(cc_cvd_any, svy_post2013)                                                            
+## No.No                                 svymean                    0.8505                    0.1495
+##                                       SE                         0.0033                    0.0033
+## Yes.No                                svymean                    0.6688                    0.3312
+##                                       SE                         0.0100                    0.0100
+## No.Yes                                svymean                    0.8511                    0.1489
+##                                       SE                         0.0050                    0.0050
+## Yes.Yes                               svymean                    0.7196                    0.2804
+##                                       SE                         0.0125                    0.0125</code></pre>
+<pre class="r"><code>egfr = svyby(~ bp_uncontrolled_140_90, ~ interaction(cc_egfr_lt60, svy_post2013), 
+            design = htndstrat, svymean)
+print(ftable(egfr, rownames = list(egfr = c(&quot;No&quot;, &quot;Yes&quot;)), 
+       com.imp = c(&quot;pre 2013&quot;, &quot;post 2013&quot;)), digits = 2)</code></pre>
+<pre><code>##                                                  bp_uncontrolled_140_90No bp_uncontrolled_140_90Yes
+## interaction(cc_egfr_lt60, svy_post2013)                                                            
+## No.No                                   svymean                    0.8527                    0.1473
+##                                         SE                         0.0033                    0.0033
+## Yes.No                                  svymean                    0.5994                    0.4006
+##                                         SE                         0.0123                    0.0123
+## No.Yes                                  svymean                    0.8545                    0.1455
+##                                         SE                         0.0053                    0.0053
+## Yes.Yes                                 svymean                    0.6345                    0.3655
+##                                         SE                         0.0197                    0.0197</code></pre>
+<pre class="r"><code>acr = svyby(~ bp_uncontrolled_140_90, ~ interaction(cc_acr_gteq30, svy_post2013), 
+            design = htndstrat, svymean)
+print(ftable(acr, rownames = list(acr = c(&quot;No&quot;, &quot;Yes&quot;)), 
+       com.imp = c(&quot;pre 2013&quot;, &quot;post 2013&quot;)), digits = 2)</code></pre>
+<pre><code>##                                                   bp_uncontrolled_140_90No bp_uncontrolled_140_90Yes
+## interaction(cc_acr_gteq30, svy_post2013)                                                            
+## No.No                                    svymean                    0.8599                    0.1401
+##                                          SE                         0.0032                    0.0032
+## Yes.No                                   svymean                    0.6271                    0.3729
+##                                          SE                         0.0091                    0.0091
+## No.Yes                                   svymean                    0.8637                    0.1363
+##                                          SE                         0.0048                    0.0048
+## Yes.Yes                                  svymean                    0.6404                    0.3596
+##                                          SE                         0.0159                    0.0159</code></pre>
 <pre class="r"><code>svychisq(~ demo_age_cat + svy_post2013, design = htndstrat, statistic = &quot;F&quot;)</code></pre>
 <pre><code>## 
 ##  Pearson&#39;s X^2: Rao &amp; Scott adjustment
@@ -536,12 +654,54 @@ print(ftable(smoke, rownames = list(smoke = c(&quot;Never&quot;, &quot;Former&qu
 ## 
 ## data:  svychisq(~demo_gender + svy_post2013, design = htndstrat, statistic = &quot;F&quot;)
 ## F = 0.0032144, ndf = 1, ddf = 163, p-value = 0.9549</code></pre>
+<pre class="r"><code>svychisq(~ bp_med_n_pills + svy_post2013, design = htndstrat, statistic = &quot;F&quot;)</code></pre>
+<pre><code>## 
+##  Pearson&#39;s X^2: Rao &amp; Scott adjustment
+## 
+## data:  svychisq(~bp_med_n_pills + svy_post2013, design = htndstrat,     statistic = &quot;F&quot;)
+## F = 16.388, ndf = 3.4095, ddf = 555.7468, p-value = 3.03e-11</code></pre>
 <pre class="r"><code>svychisq(~ cc_smoke + svy_post2013, design = htndstrat, statistic = &quot;F&quot;)</code></pre>
 <pre><code>## 
 ##  Pearson&#39;s X^2: Rao &amp; Scott adjustment
 ## 
 ## data:  svychisq(~cc_smoke + svy_post2013, design = htndstrat, statistic = &quot;F&quot;)
 ## F = 25.193, ndf = 1.9636, ddf = 320.0741, p-value = 9.589e-11</code></pre>
+<pre class="r"><code>svychisq(~ cc_bmi + svy_post2013, design = htndstrat, statistic = &quot;F&quot;)</code></pre>
+<pre><code>## 
+##  Pearson&#39;s X^2: Rao &amp; Scott adjustment
+## 
+## data:  svychisq(~cc_bmi + svy_post2013, design = htndstrat, statistic = &quot;F&quot;)
+## F = 37.916, ndf = 2.5476, ddf = 415.2588, p-value &lt; 2.2e-16</code></pre>
+<pre class="r"><code>svychisq(~ cc_diabetes + svy_post2013, design = htndstrat, statistic = &quot;F&quot;)</code></pre>
+<pre><code>## 
+##  Pearson&#39;s X^2: Rao &amp; Scott adjustment
+## 
+## data:  svychisq(~cc_diabetes + svy_post2013, design = htndstrat, statistic = &quot;F&quot;)
+## F = 51.75, ndf = 1, ddf = 163, p-value = 2.173e-11</code></pre>
+<pre class="r"><code>svychisq(~ cc_ckd + svy_post2013, design = htndstrat, statistic = &quot;F&quot;)</code></pre>
+<pre><code>## 
+##  Pearson&#39;s X^2: Rao &amp; Scott adjustment
+## 
+## data:  svychisq(~cc_ckd + svy_post2013, design = htndstrat, statistic = &quot;F&quot;)
+## F = 8.9139, ndf = 1, ddf = 163, p-value = 0.003267</code></pre>
+<pre class="r"><code>svychisq(~ cc_cvd_any + svy_post2013, design = htndstrat, statistic = &quot;F&quot;)</code></pre>
+<pre><code>## 
+##  Pearson&#39;s X^2: Rao &amp; Scott adjustment
+## 
+## data:  svychisq(~cc_cvd_any + svy_post2013, design = htndstrat, statistic = &quot;F&quot;)
+## F = 5.129, ndf = 1, ddf = 163, p-value = 0.02485</code></pre>
+<pre class="r"><code>svychisq(~ cc_egfr_lt60 + svy_post2013, design = htndstrat, statistic = &quot;F&quot;)</code></pre>
+<pre><code>## 
+##  Pearson&#39;s X^2: Rao &amp; Scott adjustment
+## 
+## data:  svychisq(~cc_egfr_lt60 + svy_post2013, design = htndstrat, statistic = &quot;F&quot;)
+## F = 3.1911, ndf = 1, ddf = 163, p-value = 0.0759</code></pre>
+<pre class="r"><code>svychisq(~ cc_acr_gteq30 + svy_post2013, design = htndstrat, statistic = &quot;F&quot;)</code></pre>
+<pre><code>## 
+##  Pearson&#39;s X^2: Rao &amp; Scott adjustment
+## 
+## data:  svychisq(~cc_acr_gteq30 + svy_post2013, design = htndstrat, statistic = &quot;F&quot;)
+## F = 5.5367, ndf = 1, ddf = 163, p-value = 0.01981</code></pre>
 <pre class="r"><code># figure 1
 htn_pre2013 = subset(htndstrat, svy_post2013 == &quot;No&quot;)
 htn_post2013 = subset(htndstrat, svy_post2013 == &quot;Yes&quot;)
