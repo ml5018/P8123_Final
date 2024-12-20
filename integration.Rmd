@@ -9,6 +9,8 @@ library(cardioStatsUSA)
 library(dplyr)
 library(survey)
 library(mice)
+library(ggplot2)
+library(hrbrthemes)
 ```
 
 ```{r data}
@@ -158,27 +160,83 @@ results <- lapply(imputed_datasets, function(dataset) {
 
 pooled_results <- pool(results)
 
-summary(pooled_results)
+pooled_summary <- summary(pooled_results)
+pooled_summary$lower <- pooled_summary$estimate - qt(0.975, pooled_summary$df) * pooled_summary$std.error
+pooled_summary$upper <- pooled_summary$estimate + qt(0.975, pooled_summary$df) * pooled_summary$std.error
+
+print(pooled_summary)
+
+pooled_summary$OR <- exp(pooled_summary$estimate)
+pooled_summary$OR_lower <- exp(pooled_summary$lower)
+pooled_summary$OR_upper <- exp(pooled_summary$upper)
+print(pooled_summary[, c("term", "OR", "OR_lower", "OR_upper", "p.value")])
 
 # IPTW
 results <- lapply(imputed_datasets, function(dataset) {
-  
+
   design = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_cal, 
                       data = dataset, nest = TRUE)
 
   ps_model <- svyglm(svy_post2013 ~ demo_age_cat + demo_race + demo_gender + demo_pregnant + bp_med_recommended_escesh + bp_med_n_pills + cc_smoke + cc_bmi + cc_diabetes + cc_ckd + cc_cvd_any + cc_egfr_lt60 + cc_acr_gteq30 + cc_hba1c , family = binomial, design = design) 
   
-  dataset$ps <- ps_model$fitted.values
-  
-  dataset$iptw <- ifelse(dataset$svy_post2013 == "Yes", 1/dataset$ps,1/(1-dataset$ps))
-  
+  ps <- ps_model$fitted.values
+
+  iptw <- ifelse(dataset$svy_post2013=="Yes", 1/ps, 1/(1-ps))
+ 
   new_design = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_cal*iptw, 
                       data = dataset, nest = TRUE)
   
-  svyglm(bp_control_140_90 ~ svy_post2013, family = binomial, design = new_design) 
+  svyglm(bp_control_140_90 ~ svy_post2013, family = quasibinomial, design = new_design) 
 })
 
 pooled_results <- pool(results)
 
-summary(pooled_results)
+pooled_summary1 <- summary(pooled_results)
+pooled_summary1$lower <- pooled_summary1$estimate - qt(0.975, pooled_summary1$df) * pooled_summary1$std.error
+pooled_summary1$upper <- pooled_summary1$estimate + qt(0.975, pooled_summary1$df) * pooled_summary1$std.error
+pooled_summary1$OR <- exp(pooled_summary1$estimate)
+pooled_summary1$OR_lower <- exp(pooled_summary1$lower)
+pooled_summary1$OR_upper <- exp(pooled_summary1$upper)
+print(pooled_summary1)
+
+
+design = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_cal, 
+                      data = data, nest = TRUE)
+modelsummary <- summary(svyglm(bp_control_140_90 ~ demo_age_cat + demo_race + demo_gender + demo_pregnant + bp_med_n_pills + cc_smoke + cc_bmi + cc_diabetes + cc_ckd + cc_cvd_any + cc_egfr_lt60 + cc_acr_gteq30 + cc_hba1c + svy_post2013, family = quasibinomial, design = design,data=data) )
+
+# figure 2
+data_filtered <- data %>% select("svy_psu","demo_age_cat", "demo_race", "demo_gender", "demo_pregnant", 
+                   "bp_med_recommended_escesh", "bp_med_n_pills", "cc_smoke", 
+                   "cc_bmi", "cc_diabetes", "cc_ckd", "cc_cvd_any", "svy_post2013",
+                   "cc_egfr_lt60", "cc_acr_gteq30", "cc_hba1c","svy_weight_cal","svy_strata")
+data_filtered <- na.omit(data_filtered)
+
+
+design = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_cal, 
+                      data = data_filtered, nest = TRUE)
+ps_model <- svyglm(svy_post2013 ~ demo_age_cat + demo_race + demo_gender + demo_pregnant + bp_med_recommended_escesh + bp_med_n_pills + cc_smoke + cc_bmi + cc_diabetes + cc_ckd + cc_cvd_any + cc_egfr_lt60 + cc_acr_gteq30 + cc_hba1c , family = binomial, data=data_filtered, design = design) 
+
+data_filtered$propensity_score <- ps_model$fitted.values
+
+data_filtered <- data_filtered %>%
+  mutate(weight = ifelse(svy_post2013=="Yes", 
+                         1 / propensity_score, 
+                         1 / (1 - propensity_score)),
+         weight = weight * svy_weight_cal)
+
+ggplot(data_filtered %>% mutate(var1 = ifelse(svy_post2013 == "Yes", propensity_score, NA), 
+    var2 = ifelse(svy_post2013 == "No", propensity_score, NA)), aes(x=x, weight = svy_weight_cal))+
+  geom_density( aes(x = var1, y = ..density..), fill="springgreen4",alpha=0.9) +
+  geom_density( aes(x = var2, y = -..density..), fill= "slateblue4",alpha=0.9) +
+  theme_ipsum() +
+  xlab("Distribution of propensity_score") +
+  scale_x_continuous(limits = c(0, 0.65), breaks = seq(0, 0.65, 0.1))
+
+ggplot(data_filtered %>% mutate(var1 = ifelse(svy_post2013 == "Yes", propensity_score, NA), 
+    var2 = ifelse(svy_post2013 == "No", propensity_score, NA)), aes(x=x, weight = weight))+
+  geom_density( aes(x = var1, y = ..density..), fill="#69b3a2",alpha=0.7) +
+  geom_density( aes(x = var2, y = -..density..), fill= "#404080",alpha=0.7) +
+  theme_ipsum() +
+  xlab("Distribution of propensity_score") +
+  scale_x_continuous(limits = c(0, 0.65), breaks = seq(0, 0.65, 0.1))
 ```
