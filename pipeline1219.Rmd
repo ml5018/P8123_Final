@@ -1,0 +1,108 @@
+---
+title: "Data Cleaning"
+author: "Mengxiao Luan"
+output: pdf_document
+---
+
+```{r package}
+library(cardioStatsUSA)
+library(dplyr)
+library(survey)
+```
+
+```{r data}
+# data input
+data_key = nhanes_key
+
+nhanes_data = nhanes_data |> 
+  mutate(demo_age_cat = as.factor(demo_age_cat),
+         demo_race = as.factor(demo_race),
+         demo_race_black = as.factor(demo_race_black),
+         demo_gender = as.factor(demo_gender),
+         bp_control_140_90 = as.factor(bp_control_140_90),
+         bp_med_use = as.factor(bp_med_use),
+         cc_smoke = as.factor(cc_smoke),
+         cc_bmi = as.factor(cc_bmi),
+         svy_year = as.factor(svy_year))
+
+# combine year cycles
+nhanes_data = nhanes_data |>
+  mutate(svy_weight_mec = svy_weight_mec / 10.6)
+
+# create binary indicator
+nhanes_data = nhanes_data |>
+  mutate(svy_post2013 = 
+           ifelse(svy_year %in% c("2013-2014", "2015-2016", "2017-2020"), "Yes", "No")) |>
+  mutate(svy_post2013 = as.factor(svy_post2013))
+
+# subgroup and calibration
+nhanes_sub = nhanes_data[svy_subpop_htn == 1]
+nhanes_sub = nhanes_calibrate(nhanes_sub, nhanes_data, "svy_year")
+
+# dstrat = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_mec, 
+#                    data = nhanes_data, nest = TRUE) 
+# htsub = subset(dstrat, svy_subpop_htn == 1)
+# yrsub = subset(htsub, svy_year %in% c("2013-2014", "2015-2016", "2017-2020"))
+
+# create survey design
+htndstrat = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_cal, 
+                      data = nhanes_sub, nest = TRUE)
+
+```
+
+```{r}
+# multiple imputation
+library(mice)
+data <- nhanes_sub %>% 
+  select(svy_year,svy_psu, svy_strata, bp_control_140_90, starts_with("demo_"), 
+         bp_med_recommended_escesh, bp_med_n_pills, starts_with("cc_"), 
+         svy_post2013,svy_weight_cal,-cc_cvd_chd,-cc_cvd_hf)
+# Set imputation method
+method <- mice(data, m = 1, maxit = 0)$method
+method
+method["cc_egfr"] <- "norm" 
+method["cc_acr"] <- "norm" 
+method["cc_hba1c"] <- "norm" 
+
+# imp
+imp <- mice(data, m = 5, method = method, maxit = 5, seed = 123)
+imputed_datasets <- complete(imp, "all")
+
+# regression
+results <- lapply(imputed_datasets, function(dataset) {
+  design = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_cal, 
+                      data = dataset, nest = TRUE)
+  svyglm(bp_control_140_90 ~ demo_age_cat + demo_race + demo_gender + demo_pregnant + bp_med_recommended_escesh + bp_med_n_pills + cc_smoke + cc_bmi + cc_diabetes + cc_ckd + cc_cvd_any + cc_egfr_lt60 + cc_acr_gteq30 + cc_hba1c + svy_post2013, family = quasibinomial, design = design) 
+})
+
+pooled_results <- pool(results)
+
+summary(pooled_results)
+
+# IPTW
+results <- lapply(imputed_datasets, function(dataset) {
+  
+  design = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_cal, 
+                      data = dataset, nest = TRUE)
+
+  ps_model <- svyglm(svy_post2013 ~ demo_age_cat + demo_race + demo_gender + demo_pregnant + bp_med_recommended_escesh + bp_med_n_pills + cc_smoke + cc_bmi + cc_diabetes + cc_ckd + cc_cvd_any + cc_egfr_lt60 + cc_acr_gteq30 + cc_hba1c , family = binomial, design = design) 
+  
+  dataset$ps <- ps_model$fitted.values
+  
+  dataset$iptw <- ifelse(dataset$svy_post2013=="Yes", 1/dataset$ps,1/(1-dataset$ps))
+  
+  new_design = svydesign(ids = ~ svy_psu, strata = ~ svy_strata, weights = ~ svy_weight_cal*iptw, 
+                      data = dataset, nest = TRUE)
+  
+  svyglm(bp_control_140_90 ~ svy_post2013, family = binomial, design = new_design) 
+})
+
+pooled_results <- pool(results)
+
+summary(pooled_results)
+
+```
+
+
+
+
